@@ -373,6 +373,42 @@ VLIB_CLI_COMMAND (show_vpe_version_command, static) = {
   .function = show_dpdk_version_command_fn,
 };
 
+extern clib_error_t *
+dpdk_detach_device(vlib_main_t *vm, dpdk_main_t *dm, const u32 hw_if_index);
+
+static clib_error_t *
+dpdk_detach_cli_command_fn (vlib_main_t *vm,
+                            unformat_input_t *input,
+                            vlib_cli_command_t *cmd)
+{
+    dpdk_main_t *dm = &dpdk_main;
+    vnet_main_t *vnm = vnet_get_main ();
+    u32 hw_if_index = ~0;
+    
+    if (unformat (input, "%U", unformat_vnet_hw_interface, vnm,
+                  &hw_if_index))
+      ;
+    else if (unformat (input, "%u", &hw_if_index))
+      ;
+    else 
+        return clib_error_return (0, "Please specify valid hw-interface name or index");
+
+    return dpdk_detach_device (vm, dm, hw_if_index);
+}
+
+/*?
+ * This command is used to detach the DPDK interface.
+ *
+ * @cliexpar
+ * Example of how to detach the DPDK interface:
+ * @cliexcmd{detach dpdk GigabitEthernet0/8/0}
+?*/
+VLIB_CLI_COMMAND (detach_dpdk_version_command, static) = {
+  .path = "detach dpdk",
+  .short_help = "detach dpdk <hw-interface-name | hw-interface-index>",
+  .function = dpdk_detach_cli_command_fn,
+};
+
 /* Dummy function to get us linked in. */
 void
 dpdk_cli_reference (void)
